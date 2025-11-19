@@ -1,3 +1,4 @@
+
 import { PosterTheme } from "./types";
 
 export const THEMES: PosterTheme[] = [
@@ -19,6 +20,23 @@ export const THEMES: PosterTheme[] = [
     }
   },
   {
+    id: 'nature',
+    name: 'Forest Growth', // Matches Page 2 Green
+    colors: {
+      primary: '#669966',
+      secondary: '#d1e0d1',
+      accent: '#c48660', // Earthy orange
+      text: '#1a2e1a',
+      background: '#f0f5f0',
+      sidebarBackground: '#4d7a4d',
+      sidebarText: '#ffffff',
+    },
+    fontFamily: {
+      heading: 'Verdana, sans-serif',
+      body: 'Verdana, sans-serif',
+    }
+  },
+  {
     id: 'ocean',
     name: 'Deep Ocean',
     colors: {
@@ -33,6 +51,40 @@ export const THEMES: PosterTheme[] = [
     fontFamily: {
       heading: 'Verdana, sans-serif',
       body: 'Verdana, sans-serif',
+    }
+  },
+  {
+    id: 'ice',
+    name: 'Arctic Blue', // Matches Page 4
+    colors: {
+      primary: '#2c3e50',
+      secondary: '#ecf0f1',
+      accent: '#3498db',
+      text: '#2c3e50',
+      background: '#ffffff',
+      sidebarBackground: '#34495e',
+      sidebarText: '#ffffff',
+    },
+    fontFamily: {
+      heading: 'Georgia, serif',
+      body: 'Arial, sans-serif',
+    }
+  },
+  {
+    id: 'brick',
+    name: 'University Red', // Matches Page 3/7
+    colors: {
+      primary: '#a55e5e',
+      secondary: '#f2dede',
+      accent: '#d9534f',
+      text: '#3e1b1b',
+      background: '#fff5f5',
+      sidebarBackground: '#804040',
+      sidebarText: '#ffffff',
+    },
+    fontFamily: {
+      heading: 'Trebuchet MS, sans-serif',
+      body: 'Trebuchet MS, sans-serif',
     }
   },
   {

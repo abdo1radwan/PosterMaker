@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import { PosterData, PosterTheme, ChartDataPoint, PosterLayout } from '../types';
 import { THEMES } from '../themes';
 import { generatePosterContent } from '../services/geminiService';
-import { Sparkles, Download, Loader2, FileText, Presentation, ChevronRight, ChevronDown, Palette, LayoutTemplate, Wand2, BarChart3, Plus, Trash2, Info, Columns, RectangleHorizontal, Sidebar } from 'lucide-react';
+import { Sparkles, Download, Loader2, FileText, Presentation, ChevronRight, ChevronDown, Palette, LayoutTemplate, Wand2, BarChart3, Plus, Trash2, Info, Columns, RectangleHorizontal, Sidebar, CircleDashed, LayoutGrid, Table2 } from 'lucide-react';
 import { exportToPDF, exportToPPTX } from '../services/exportService';
 
 interface EditorProps {
@@ -277,27 +277,12 @@ export const Editor: React.FC<EditorProps> = ({ data, theme, layout, onDataChang
                  <div>
                     <h3 className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-4">Layout Template</h3>
                     <div className="grid grid-cols-3 gap-3">
-                        <button 
-                             onClick={() => onLayoutChange('classic')}
-                             className={`flex flex-col items-center gap-2 p-3 rounded-lg border-2 transition-all ${layout === 'classic' ? 'border-blue-500 bg-slate-800' : 'border-slate-700 hover:bg-slate-800'}`}
-                        >
-                             <Sidebar className={`w-6 h-6 ${layout === 'classic' ? 'text-blue-400' : 'text-slate-500'}`} />
-                             <span className="text-[10px] font-medium text-slate-400">Classic</span>
-                        </button>
-                        <button 
-                             onClick={() => onLayoutChange('standard')}
-                             className={`flex flex-col items-center gap-2 p-3 rounded-lg border-2 transition-all ${layout === 'standard' ? 'border-blue-500 bg-slate-800' : 'border-slate-700 hover:bg-slate-800'}`}
-                        >
-                             <Columns className={`w-6 h-6 ${layout === 'standard' ? 'text-blue-400' : 'text-slate-500'}`} />
-                             <span className="text-[10px] font-medium text-slate-400">Standard</span>
-                        </button>
-                        <button 
-                             onClick={() => onLayoutChange('visual')}
-                             className={`flex flex-col items-center gap-2 p-3 rounded-lg border-2 transition-all ${layout === 'visual' ? 'border-blue-500 bg-slate-800' : 'border-slate-700 hover:bg-slate-800'}`}
-                        >
-                             <RectangleHorizontal className={`w-6 h-6 ${layout === 'visual' ? 'text-blue-400' : 'text-slate-500'}`} />
-                             <span className="text-[10px] font-medium text-slate-400">Visual</span>
-                        </button>
+                        <LayoutButton layoutId="classic" current={layout} onClick={onLayoutChange} icon={Sidebar} label="Classic" />
+                        <LayoutButton layoutId="standard" current={layout} onClick={onLayoutChange} icon={Columns} label="Standard" />
+                        <LayoutButton layoutId="visual" current={layout} onClick={onLayoutChange} icon={RectangleHorizontal} label="Visual" />
+                        <LayoutButton layoutId="cycle" current={layout} onClick={onLayoutChange} icon={CircleDashed} label="Cycle" />
+                        <LayoutButton layoutId="geometric" current={layout} onClick={onLayoutChange} icon={LayoutGrid} label="Geometric" />
+                        <LayoutButton layoutId="research" current={layout} onClick={onLayoutChange} icon={Table2} label="Research" />
                     </div>
                 </div>
 
@@ -358,6 +343,16 @@ export const Editor: React.FC<EditorProps> = ({ data, theme, layout, onDataChang
     </div>
   );
 };
+
+const LayoutButton: React.FC<{ layoutId: PosterLayout; current: PosterLayout; onClick: (l: PosterLayout) => void; icon: React.ElementType; label: string }> = ({ layoutId, current, onClick, icon: Icon, label }) => (
+    <button 
+        onClick={() => onClick(layoutId)}
+        className={`flex flex-col items-center gap-2 p-3 rounded-lg border-2 transition-all ${current === layoutId ? 'border-blue-500 bg-slate-800' : 'border-slate-700 hover:bg-slate-800'}`}
+    >
+        <Icon className={`w-6 h-6 ${current === layoutId ? 'text-blue-400' : 'text-slate-500'}`} />
+        <span className="text-[10px] font-medium text-slate-400">{label}</span>
+    </button>
+);
 
 const TabButton: React.FC<{ active: boolean; onClick: () => void; icon: React.ReactNode; label: string }> = ({ active, onClick, icon, label }) => (
     <button 

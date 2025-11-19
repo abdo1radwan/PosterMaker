@@ -29,7 +29,7 @@ const DecorativeHeader: React.FC<{ theme: PosterTheme }> = ({ theme }) => {
                 <path d="M0,70 Q25,20 50,70 T100,70" />
             </svg>
         )}
-        {(theme.id === 'slate' || theme.id === 'minimal') && (
+        {(theme.id === 'slate' || theme.id === 'minimal' || theme.id === 'ice') && (
             <svg className="absolute right-0 top-0 h-full w-auto opacity-10" viewBox="0 0 200 200">
                  <circle cx="100" cy="100" r="80" stroke={color} strokeWidth="2" fill="none"/>
                  <circle cx="100" cy="100" r="60" stroke={color} strokeWidth="2" fill="none"/>
@@ -37,10 +37,15 @@ const DecorativeHeader: React.FC<{ theme: PosterTheme }> = ({ theme }) => {
                  <line x1="20" y1="100" x2="180" y2="100" stroke={color} strokeWidth="2" />
             </svg>
         )}
-        {theme.id === 'crimson' && (
+        {(theme.id === 'crimson' || theme.id === 'brick') && (
              <svg className="absolute right-0 top-0 h-full w-auto opacity-15" viewBox="0 0 100 100">
                  <path d="M10,50 L50,10 L90,50 L50,90 Z" fill="none" stroke={color} strokeWidth="1" />
                  <path d="M50,10 L50,90 M10,50 L90,50" stroke={color} strokeWidth="0.5" />
+             </svg>
+        )}
+         {theme.id === 'nature' && (
+             <svg className="absolute right-0 top-0 h-full w-auto opacity-20" viewBox="0 0 100 100">
+                 <path d="M50,100 Q25,50 50,0 Q75,50 50,100 Z" fill={color} />
              </svg>
         )}
     </div>
@@ -48,34 +53,56 @@ const DecorativeHeader: React.FC<{ theme: PosterTheme }> = ({ theme }) => {
 };
 
 // Reusable Section Component
-const Section: React.FC<{ title: string; content: string; theme: PosterTheme; isRefs?: boolean; className?: string }> = ({ title, content, theme, isRefs, className }) => (
+const Section: React.FC<{ title: string; content: string; theme: PosterTheme; isRefs?: boolean; className?: string; variant?: 'default' | 'filled' }> = ({ title, content, theme, isRefs, className, variant = 'default' }) => (
     <div className={`flex flex-col h-full ${className}`}>
-        <div 
-            className="border-b-4 mb-4 text-center py-2 rounded-t-sm"
-            style={{ 
-                backgroundColor: theme.colors.secondary, 
-                borderColor: theme.colors.primary,
-                borderBottomColor: theme.colors.primary
-            }}
-        >
-            <h2 
-                className="text-[40px] font-black uppercase tracking-tighter"
-                style={{ color: theme.colors.primary, fontFamily: theme.fontFamily.heading }}
+        {variant === 'default' && (
+            <>
+                <div 
+                    className="border-b-4 mb-4 text-center py-2 rounded-t-sm"
+                    style={{ 
+                        backgroundColor: theme.colors.secondary, 
+                        borderColor: theme.colors.primary,
+                        borderBottomColor: theme.colors.primary
+                    }}
+                >
+                    <h2 
+                        className="text-[40px] font-black uppercase tracking-tighter"
+                        style={{ color: theme.colors.primary, fontFamily: theme.fontFamily.heading }}
+                    >
+                        {title}
+                    </h2>
+                </div>
+                <div 
+                    className={`bg-white p-6 shadow-sm flex-grow text-[28px] leading-snug text-justify border-l-4 rounded-b-sm ${isRefs ? 'text-[24px]' : ''}`}
+                    style={{ 
+                        borderLeftColor: theme.colors.secondary,
+                        fontFamily: theme.fontFamily.body 
+                    }}
+                >
+                    {content.split('\n').map((paragraph, i) => (
+                        <p key={i} className="mb-6 last:mb-0">{paragraph}</p>
+                    ))}
+                </div>
+            </>
+        )}
+        {variant === 'filled' && (
+            <div 
+                className="h-full rounded-xl overflow-hidden flex flex-col"
+                style={{ backgroundColor: theme.colors.background }}
             >
-                {title}
-            </h2>
-        </div>
-        <div 
-            className={`bg-white p-6 shadow-sm flex-grow text-[28px] leading-snug text-justify border-l-4 rounded-b-sm ${isRefs ? 'text-[24px]' : ''}`}
-            style={{ 
-                borderLeftColor: theme.colors.secondary,
-                fontFamily: theme.fontFamily.body 
-            }}
-        >
-            {content.split('\n').map((paragraph, i) => (
-                <p key={i} className="mb-6 last:mb-0">{paragraph}</p>
-            ))}
-        </div>
+                <div className="p-4" style={{ backgroundColor: theme.colors.primary }}>
+                    <h2 className="text-[32px] font-bold text-white uppercase">{title}</h2>
+                </div>
+                <div 
+                    className={`p-6 flex-grow text-[24px] leading-snug text-justify`}
+                    style={{ backgroundColor: `${theme.colors.primary}15` }} // 10% opacity
+                >
+                    {content.split('\n').map((paragraph, i) => (
+                        <p key={i} className="mb-6 last:mb-0">{paragraph}</p>
+                    ))}
+                </div>
+            </div>
+        )}
     </div>
 );
 
@@ -100,6 +127,46 @@ const ChartSection: React.FC<{ data: PosterData; theme: PosterTheme }> = ({ data
         <p className="text-[24px] italic text-center opacity-70" style={{color: theme.colors.text}}>Figure 1. Analysis of Key Metrics.</p>
     </div>
 );
+
+// Cycle Circle Component
+const CycleCircle: React.FC<{ 
+    title: string; 
+    content: string; 
+    x: string; 
+    y: string; 
+    w: string; 
+    h: string; 
+    theme: PosterTheme; 
+}> = ({ title, content, x, y, w, h, theme }) => (
+    <div 
+        className="absolute rounded-[100px] flex flex-col overflow-hidden shadow-xl border-8"
+        style={{ 
+            left: x, top: y, width: w, height: h,
+            backgroundColor: '#f3f4f6',
+            borderColor: '#e5e7eb'
+        }}
+    >
+        <div className="py-4 text-center border-b-2 border-gray-200" style={{ backgroundColor: theme.colors.secondary }}>
+            <h2 className="text-[36px] font-bold uppercase" style={{ color: theme.colors.primary }}>{title}</h2>
+        </div>
+        <div className="p-8 text-[22px] leading-normal overflow-hidden text-center flex items-center justify-center h-full">
+            <p className="line-clamp-[12]">{content}</p>
+        </div>
+    </div>
+);
+
+// Arrow SVG Component for Cycle Layout
+const CycleArrow: React.FC<{ path: string; color: string }> = ({ path, color }) => (
+    <svg className="absolute inset-0 w-full h-full pointer-events-none overflow-visible" style={{ zIndex: 10 }}>
+        <path d={path} fill="none" stroke={color} strokeWidth="24" strokeLinecap="round" markerEnd="url(#arrowhead)" />
+        <defs>
+            <marker id="arrowhead" markerWidth="4" markerHeight="4" refX="2" refY="2" orient="auto">
+                <path d="M0,0 L4,2 L0,4" fill={color} />
+            </marker>
+        </defs>
+    </svg>
+);
+
 
 export const PosterPreview: React.FC<PosterPreviewProps> = ({ data, theme, layout, scale = 0.25 }) => {
   const styles = {
@@ -266,6 +333,115 @@ export const PosterPreview: React.FC<PosterPreviewProps> = ({ data, theme, layou
                       <Section title="References" content={data.references} theme={theme} isRefs />
                       <div className="text-center mt-auto">
                           <p className="text-[24px] font-bold" style={{color: theme.colors.primary}}>{data.contactName} | {data.contactEmail}</p>
+                      </div>
+                  </div>
+              </div>
+          )}
+
+          {/* --- CYCLE LAYOUT (Circular Flow) --- */}
+          {layout === 'cycle' && (
+            <div className="w-full h-full relative bg-white">
+                {/* Background Arrows - Hardcoded for 4800x3200 canvas */}
+                <CycleArrow path="M 1200 800 Q 800 2000 1000 2500" color={theme.colors.accent === '#fef08a' ? '#fca5a5' : theme.colors.accent} />
+                <CycleArrow path="M 1500 2700 Q 2400 2900 2200 2500" color={theme.colors.accent === '#fef08a' ? '#fca5a5' : theme.colors.accent} />
+                <CycleArrow path="M 2600 2500 Q 3200 2900 3600 2500" color={theme.colors.accent === '#fef08a' ? '#fca5a5' : theme.colors.accent} />
+                <CycleArrow path="M 3900 2200 Q 4200 1500 3600 900" color={theme.colors.accent === '#fef08a' ? '#fca5a5' : theme.colors.accent} />
+
+                {/* Circles */}
+                {/* Intro - Top Left */}
+                <CycleCircle title="Introduction" content={data.introduction} x="500px" y="200px" w="1200px" h="800px" theme={theme} />
+                
+                {/* Conclusion - Top Right */}
+                <CycleCircle title="Conclusion" content={data.conclusions} x="3100px" y="200px" w="1200px" h="800px" theme={theme} />
+
+                {/* Materials - Bottom Left */}
+                <CycleCircle title="Materials" content={data.methods.substring(0, 300) + "..."} x="300px" y="1800px" w="1000px" h="800px" theme={theme} />
+
+                {/* Methodology - Bottom Center */}
+                <CycleCircle title="Methodology" content={data.methods} x="1600px" y="2000px" w="1400px" h="900px" theme={theme} />
+
+                {/* Results - Bottom Right */}
+                <CycleCircle title="Results" content={data.results} x="3300px" y="1800px" w="1200px" h="900px" theme={theme} />
+                
+                {/* Center Chart */}
+                <div className="absolute top-[1200px] left-[1800px] w-[1000px] h-[600px] z-10 shadow-lg border-4 border-white rounded-xl bg-white p-4">
+                    <ChartSection data={data} theme={theme} />
+                </div>
+            </div>
+          )}
+
+          {/* --- GEOMETRIC LAYOUT (Colored Blocks) --- */}
+          {layout === 'geometric' && (
+              <div className="p-12 h-full grid grid-cols-4 gap-8 bg-white">
+                  {/* Col 1 */}
+                  <div className="flex flex-col gap-8">
+                      <div className="bg-rose-50 h-[500px] p-8 border-l-8 border-rose-400 rounded-r-xl shadow-sm">
+                          <h3 className="text-[40px] font-bold text-rose-800 mb-4">Abstract</h3>
+                          <p className="text-[24px]">{data.abstract}</p>
+                      </div>
+                      <Section title="Introduction" content={data.introduction} theme={theme} variant="filled" />
+                  </div>
+
+                  {/* Col 2 (Wide) */}
+                  <div className="col-span-2 flex flex-col gap-8">
+                      <div className="h-[1400px] rounded-xl overflow-hidden flex flex-col bg-slate-100 border-t-8 border-slate-400">
+                          <div className="p-4 bg-slate-200">
+                              <h2 className="text-[32px] font-bold text-slate-700 uppercase">Methodology</h2>
+                          </div>
+                          <div className="p-8 text-[26px] leading-relaxed">{data.methods}</div>
+                          <div className="flex-grow p-8">
+                              <ChartSection data={data} theme={theme} />
+                          </div>
+                      </div>
+                      <div className="flex-grow rounded-xl overflow-hidden flex flex-col bg-indigo-50 border-t-8 border-indigo-400">
+                           <div className="p-4 bg-indigo-100">
+                              <h2 className="text-[32px] font-bold text-indigo-800 uppercase">Results</h2>
+                          </div>
+                          <div className="p-8 text-[26px] leading-relaxed">{data.results}</div>
+                      </div>
+                  </div>
+
+                  {/* Col 3 */}
+                  <div className="flex flex-col gap-8">
+                       <div className="bg-emerald-50 flex-grow p-8 border-l-8 border-emerald-500 rounded-r-xl shadow-sm flex flex-col">
+                          <h3 className="text-[40px] font-bold text-emerald-800 mb-4">Conclusion</h3>
+                          <p className="text-[24px]">{data.conclusions}</p>
+                      </div>
+                      <div className="bg-amber-50 h-[800px] p-8 border-l-8 border-amber-400 rounded-r-xl shadow-sm">
+                          <h3 className="text-[40px] font-bold text-amber-800 mb-4">Discussion</h3>
+                          <p className="text-[24px]">{data.discussion}</p>
+                      </div>
+                      <Section title="References" content={data.references} theme={theme} isRefs />
+                  </div>
+              </div>
+          )}
+
+          {/* --- RESEARCH LAYOUT (4 Column Density) --- */}
+          {layout === 'research' && (
+              <div className="p-16 h-full grid grid-cols-4 gap-12 bg-white">
+                  <div className="flex flex-col gap-10">
+                      <div className="bg-gray-100 p-6 border-b-4 border-gray-400">
+                          <h3 className="text-[32px] font-bold">Abstract</h3>
+                          <p className="text-[20px] mt-2">{data.abstract}</p>
+                      </div>
+                      <Section title="Introduction" content={data.introduction} theme={theme} />
+                  </div>
+                  <div className="flex flex-col gap-10">
+                      <Section title="Methods" content={data.methods} theme={theme} />
+                      <div className="flex-grow border-4 border-dashed border-gray-300 p-4 rounded-lg">
+                          <ChartSection data={data} theme={theme} />
+                      </div>
+                  </div>
+                  <div className="flex flex-col gap-10">
+                       <Section title="Results" content={data.results} theme={theme} />
+                       <Section title="Discussion" content={data.discussion} theme={theme} />
+                  </div>
+                  <div className="flex flex-col gap-10">
+                      <Section title="Conclusions" content={data.conclusions} theme={theme} />
+                      <Section title="References" content={data.references} theme={theme} isRefs />
+                      <div className="mt-auto border-t-4 pt-6" style={{borderColor: theme.colors.primary}}>
+                          <h4 className="text-[24px] font-bold mb-2">Acknowledgements</h4>
+                          <p className="text-[20px]">We thank the school administration and our mentors for their support.</p>
                       </div>
                   </div>
               </div>

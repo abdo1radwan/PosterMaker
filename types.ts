@@ -53,7 +53,7 @@ export interface PosterTheme {
   };
 }
 
-export type PosterLayout = 'classic' | 'standard' | 'visual';
+export type PosterLayout = 'classic' | 'standard' | 'visual' | 'cycle' | 'geometric' | 'research';
 
 export const INITIAL_POSTER_DATA: PosterData = {
   title: "PROJECT TITLE GOES HERE",

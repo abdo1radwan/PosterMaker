@@ -151,6 +151,42 @@ export const exportToPPTX = (data: PosterData, theme: PosterTheme, layout: Poste
       addSection("DISCUSSION", data.discussion, startX + sideW + gap + centerW + gap, 6, sideW, 10);
       addSection("CONCLUSIONS", data.conclusions, startX + sideW + gap + centerW + gap, 17, sideW, 8);
       addSection("REFERENCES", data.references, startX + sideW + gap + centerW + gap, 26, sideW, 9);
+  } else if (layout === 'research') {
+      // 4 Equal Cols
+      const colW = 11;
+      const gap = 1;
+      const startX = 1;
+
+      // Col 1
+      addSection("ABSTRACT", data.abstract, startX, 6, colW, 8);
+      addSection("INTRODUCTION", data.introduction, startX, 15, colW, 20);
+
+      // Col 2
+      addSection("METHODS", data.methods, startX + colW + gap, 6, colW, 12);
+      addChart(startX + colW + gap, 19, colW, 16);
+
+      // Col 3
+      addSection("RESULTS", data.results, startX + (colW + gap) * 2, 6, colW, 18);
+      addSection("DISCUSSION", data.discussion, startX + (colW + gap) * 2, 25, colW, 10);
+
+      // Col 4
+      addSection("CONCLUSIONS", data.conclusions, startX + (colW + gap) * 3, 6, colW, 10);
+      addSection("REFERENCES", data.references, startX + (colW + gap) * 3, 17, colW, 12);
+      addSection("CONTACT", `${data.contactName}\n${data.contactEmail}`, startX + (colW + gap) * 3, 30, colW, 5);
+  } else if (layout === 'geometric' || layout === 'cycle') {
+      // Fallback for complex graphic layouts -> Map to Standard-ish grid for PPTX
+      // Since we can't easily draw the arrows or complex circles in basic PPTX gen
+      const colW = 15;
+      const gap = 1;
+      const startX = 1;
+      
+      addSection("INTRODUCTION", data.introduction, startX, 6, colW, 10);
+      addSection("METHODS", data.methods, startX, 17, colW, 10);
+      addSection("RESULTS", data.results, startX + colW + gap, 6, colW, 15);
+      addChart(startX + colW + gap, 22, colW, 8);
+      addSection("CONCLUSION", data.conclusions, startX + (colW + gap) * 2, 6, colW, 8);
+      // Add Note about layout
+      slide.addText("(Note: Complex graphical layout simplified for PPTX export)", { x: 0, y: 35, w: 48, h: 1, fontSize: 14, align: 'center', color: '999999' });
   }
 
   pptx.writeFile({ fileName: `SciencePoster_${layout}.pptx` });
