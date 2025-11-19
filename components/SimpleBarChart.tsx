@@ -1,9 +1,9 @@
 
 import React from 'react';
-import { ChartConfig, PosterTheme } from '../types';
+import { VisualContent, PosterTheme } from '../types';
 
 interface SimpleBarChartProps {
-  config: ChartConfig;
+  config: VisualContent;
   theme: PosterTheme;
 }
 

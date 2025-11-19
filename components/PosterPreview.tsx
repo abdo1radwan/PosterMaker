@@ -1,7 +1,7 @@
 
 import React from 'react';
-import { PosterData, PosterTheme, PosterLayout } from '../types';
-import { SimpleBarChart } from './SimpleBarChart';
+import { PosterData, PosterTheme, PosterLayout, VisualContent } from '../types';
+import { VisualRenderer } from './VisualRenderer';
 
 interface PosterPreviewProps {
   data: PosterData;
@@ -106,25 +106,25 @@ const Section: React.FC<{ title: string; content: string; theme: PosterTheme; is
     </div>
 );
 
-// Reusable Chart/Visual Wrapper
-const ChartSection: React.FC<{ data: PosterData; theme: PosterTheme }> = ({ data, theme }) => (
+// Reusable Visual Wrapper
+const VisualSection: React.FC<{ visual: VisualContent | null; theme: PosterTheme; placeholderTitle?: string }> = ({ visual, theme, placeholderTitle }) => (
     <div className="flex flex-col gap-2 h-full">
         <div 
-            className="border-2 p-4 shadow-sm flex-grow flex flex-col items-center justify-center gap-4 rounded-sm bg-white"
+            className="border-2 p-4 shadow-sm flex-grow flex flex-col items-center justify-center gap-4 rounded-sm bg-white overflow-hidden"
             style={{ borderColor: '#e5e7eb' }}
         >
-            {data.resultsChart ? (
-                <SimpleBarChart config={data.resultsChart} theme={theme} />
+            {visual ? (
+                <VisualRenderer visual={visual} theme={theme} />
             ) : (
                 <div className="w-full h-full bg-gray-50 flex items-center justify-center text-gray-400">
                     <div className="text-center">
-                        <p className="text-[30px] font-bold mb-2">No Chart Data</p>
-                        <p className="text-[24px] italic">Add chart data in the Editor</p>
+                        <p className="text-[30px] font-bold mb-2">{placeholderTitle || "No Visual"}</p>
+                        <p className="text-[24px] italic">Configure in Editor</p>
                     </div>
                 </div>
             )}
         </div>
-        <p className="text-[24px] italic text-center opacity-70" style={{color: theme.colors.text}}>Figure 1. Analysis of Key Metrics.</p>
+        {visual && visual.title && <p className="text-[24px] italic text-center opacity-70" style={{color: theme.colors.text}}>{visual.title}</p>}
     </div>
 );
 
@@ -260,11 +260,14 @@ export const PosterPreview: React.FC<PosterPreviewProps> = ({ data, theme, layou
                 <div className="flex-1 p-12 grid grid-cols-3 gap-12 content-start bg-white">
                     <div className="flex flex-col gap-12">
                         <Section title="Introduction" content={data.introduction} theme={theme} />
-                        <Section title="Methods" content={data.methods} theme={theme} />
+                        <div className="flex-grow flex flex-col gap-4">
+                             <Section title="Methods" content={data.methods} theme={theme} />
+                             {data.methodsVisual && <div className="h-[400px]"><VisualSection visual={data.methodsVisual} theme={theme} /></div>}
+                        </div>
                     </div>
                     <div className="flex flex-col gap-12">
                          <Section title="Results" content={data.results} theme={theme} />
-                         <ChartSection data={data} theme={theme} />
+                         <VisualSection visual={data.resultsVisual} theme={theme} placeholderTitle="Results Chart" />
                     </div>
                     <div className="flex flex-col gap-12">
                         <Section title="Discussion" content={data.discussion} theme={theme} />
@@ -283,12 +286,13 @@ export const PosterPreview: React.FC<PosterPreviewProps> = ({ data, theme, layou
                       <Section title="Abstract" content={data.abstract} theme={theme} />
                       <Section title="Introduction" content={data.introduction} theme={theme} />
                       <Section title="Methods" content={data.methods} theme={theme} />
+                      {data.methodsVisual && <div className="h-[400px]"><VisualSection visual={data.methodsVisual} theme={theme} /></div>}
                   </div>
                   {/* Column 2 */}
                   <div className="flex flex-col gap-12">
                       <Section title="Results" content={data.results} theme={theme} />
                       <div className="h-[800px]">
-                        <ChartSection data={data} theme={theme} />
+                        <VisualSection visual={data.resultsVisual} theme={theme} placeholderTitle="Results Chart" />
                       </div>
                       <Section title="Discussion" content={data.discussion} theme={theme} />
                   </div>
@@ -316,12 +320,13 @@ export const PosterPreview: React.FC<PosterPreviewProps> = ({ data, theme, layou
                       <Section title="Abstract" content={data.abstract} theme={theme} />
                       <Section title="Introduction" content={data.introduction} theme={theme} />
                       <Section title="Methods" content={data.methods} theme={theme} />
+                      {data.methodsVisual && <div className="h-[300px]"><VisualSection visual={data.methodsVisual} theme={theme} /></div>}
                   </div>
 
                   {/* Center (2 Cols width) */}
                   <div className="col-span-2 flex flex-col gap-10">
                       <div className="flex-grow border-8 p-4 rounded-lg" style={{ borderColor: theme.colors.secondary }}>
-                          <ChartSection data={data} theme={theme} />
+                          <VisualSection visual={data.resultsVisual} theme={theme} placeholderTitle="Main Results" />
                       </div>
                       <Section title="Results & Analysis" content={data.results} theme={theme} />
                   </div>
@@ -365,7 +370,7 @@ export const PosterPreview: React.FC<PosterPreviewProps> = ({ data, theme, layou
                 
                 {/* Center Chart */}
                 <div className="absolute top-[1200px] left-[1800px] w-[1000px] h-[600px] z-10 shadow-lg border-4 border-white rounded-xl bg-white p-4">
-                    <ChartSection data={data} theme={theme} />
+                    <VisualSection visual={data.resultsVisual} theme={theme} placeholderTitle="Chart" />
                 </div>
             </div>
           )}
@@ -389,8 +394,9 @@ export const PosterPreview: React.FC<PosterPreviewProps> = ({ data, theme, layou
                               <h2 className="text-[32px] font-bold text-slate-700 uppercase">Methodology</h2>
                           </div>
                           <div className="p-8 text-[26px] leading-relaxed">{data.methods}</div>
+                          {data.methodsVisual && <div className="p-8 h-[400px]"><VisualSection visual={data.methodsVisual} theme={theme} /></div>}
                           <div className="flex-grow p-8">
-                              <ChartSection data={data} theme={theme} />
+                              <VisualSection visual={data.resultsVisual} theme={theme} placeholderTitle="Main Results" />
                           </div>
                       </div>
                       <div className="flex-grow rounded-xl overflow-hidden flex flex-col bg-indigo-50 border-t-8 border-indigo-400">
@@ -428,8 +434,9 @@ export const PosterPreview: React.FC<PosterPreviewProps> = ({ data, theme, layou
                   </div>
                   <div className="flex flex-col gap-10">
                       <Section title="Methods" content={data.methods} theme={theme} />
+                      {data.methodsVisual && <div className="h-[300px]"><VisualSection visual={data.methodsVisual} theme={theme} /></div>}
                       <div className="flex-grow border-4 border-dashed border-gray-300 p-4 rounded-lg">
-                          <ChartSection data={data} theme={theme} />
+                          <VisualSection visual={data.resultsVisual} theme={theme} placeholderTitle="Key Findings" />
                       </div>
                   </div>
                   <div className="flex flex-col gap-10">

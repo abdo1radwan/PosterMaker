@@ -9,11 +9,18 @@ export interface ChartDataPoint {
   value: number;
 }
 
-export interface ChartConfig {
+export type VisualType = 'bar' | 'line' | 'pie' | 'generic-svg';
+
+export interface VisualContent {
+  type: VisualType;
   title: string;
-  data: ChartDataPoint[];
-  xAxisLabel: string;
-  yAxisLabel: string;
+  // For charts
+  xAxisLabel?: string;
+  yAxisLabel?: string;
+  data?: ChartDataPoint[];
+  // For custom SVG
+  svgContent?: string;
+  description?: string;
 }
 
 export interface PosterData {
@@ -30,7 +37,10 @@ export interface PosterData {
   contactName: string;
   contactOrg: string;
   contactEmail: string;
-  resultsChart: ChartConfig | null;
+  
+  // Visuals
+  resultsVisual: VisualContent | null;
+  methodsVisual: VisualContent | null;
 }
 
 export interface PosterColors {
@@ -69,7 +79,8 @@ export const INITIAL_POSTER_DATA: PosterData = {
   contactName: "Your Name",
   contactOrg: "Your School/Org",
   contactEmail: "email@example.com",
-  resultsChart: {
+  resultsVisual: {
+    type: 'bar',
     title: "Comparative Analysis Results",
     xAxisLabel: "Test Groups",
     yAxisLabel: "Efficiency (%)",
@@ -79,5 +90,6 @@ export const INITIAL_POSTER_DATA: PosterData = {
       { label: "Variable B", value: 32 },
       { label: "Variable C", value: 88 }
     ]
-  }
+  },
+  methodsVisual: null
 };

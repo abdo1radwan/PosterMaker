@@ -2,7 +2,7 @@
 import html2canvas from 'html2canvas';
 import jsPDF from 'jspdf';
 import PptxGenJS from 'pptxgenjs';
-import { PosterData, PosterTheme, PosterLayout } from '../types';
+import { PosterData, PosterTheme, PosterLayout, VisualContent } from '../types';
 
 export const exportToPDF = async (elementId: string) => {
   const element = document.getElementById(elementId);
@@ -59,28 +59,37 @@ export const exportToPPTX = (data: PosterData, theme: PosterTheme, layout: Poste
     slide.addText(text, { x, y: y + 1, w, h: h - 1, fontSize: 18, align: 'left', valign: 'top', fontFace, fill: { color: "FFFFFF" }, color: textColor });
   };
 
-  const addChart = (x: number, y: number, w: number, h: number) => {
-      if (data.resultsChart && data.resultsChart.data.length > 0) {
+  const addVisual = (visual: VisualContent | null, x: number, y: number, w: number, h: number) => {
+      if (visual && visual.data && visual.data.length > 0 && visual.type !== 'generic-svg') {
         const chartData = [{
-            name: data.resultsChart.title,
-            labels: data.resultsChart.data.map(d => d.label),
-            values: data.resultsChart.data.map(d => d.value)
+            name: visual.title,
+            labels: visual.data.map(d => d.label),
+            values: visual.data.map(d => d.value)
         }];
-        slide.addChart(pptx.ChartType.bar, chartData, {
+
+        let chartType = pptx.ChartType.bar;
+        if (visual.type === 'line') chartType = pptx.ChartType.line;
+        if (visual.type === 'pie') chartType = pptx.ChartType.pie;
+
+        slide.addChart(chartType, chartData, {
             x, y, w, h,
             barDir: 'col',
             barGapWidthPct: 25,
-            chartColors: [accentColor],
+            chartColors: [accentColor, primaryColor, sidebarColor, '94a3b8', 'cbd5e1'],
             showValue: true,
-            title: data.resultsChart.title,
+            title: visual.title,
             titleFontSize: 18,
             titleColor: primaryColor,
-            valAxisLabel: data.resultsChart.yAxisLabel,
-            catAxisLabel: data.resultsChart.xAxisLabel
+            valAxisTitle: visual.yAxisLabel,
+            catAxisTitle: visual.xAxisLabel,
+            showLegend: visual.type === 'pie',
         });
+      } else if (visual && visual.type === 'generic-svg') {
+          slide.addShape(pptx.ShapeType.rect, { x, y, w, h, fill: { color: "F3F4F6" }, line: { color: "CCCCCC", width: 1 } });
+          slide.addText(`[SVG Diagram: ${visual.title}]\n(SVG not supported in PPTX export yet, check PDF)`, { x, y: y + h/2 - 1, w, h: 2, align: 'center', color: '666666' });
       } else {
         slide.addShape(pptx.ShapeType.rect, { x, y, w, h, fill: { color: "F3F4F6" }, line: { color: "CCCCCC", width: 1 } });
-        slide.addText("Chart Placeholder", { x, y: y + h/2, w, h: 1, align: 'center' });
+        slide.addText("Visual Placeholder", { x, y: y + h/2, w, h: 1, align: 'center' });
       }
   };
 
@@ -102,7 +111,7 @@ export const exportToPPTX = (data: PosterData, theme: PosterTheme, layout: Poste
       addSection("INTRODUCTION", data.introduction, startX, 6, colW, 10);
       addSection("METHODS", data.methods, startX, 17, colW, 10);
       addSection("RESULTS", data.results, startX + colW + gap, 6, colW, 15);
-      addChart(startX + colW + gap, 22, colW, 8);
+      addVisual(data.resultsVisual, startX + colW + gap, 22, colW, 8);
       addSection("DISCUSSION", data.discussion, startX + (colW + gap) * 2, 6, colW, 8);
       addSection("CONCLUSIONS", data.conclusions, startX + (colW + gap) * 2, 15, colW, 6);
       addSection("REFERENCES", data.references, startX + (colW + gap) * 2, 22, colW, 8);
@@ -120,7 +129,7 @@ export const exportToPPTX = (data: PosterData, theme: PosterTheme, layout: Poste
 
       // Col 2
       addSection("RESULTS", data.results, startX + colW + gap, 6, colW, 12);
-      addChart(startX + colW + gap, 19, colW, 10);
+      addVisual(data.resultsVisual, startX + colW + gap, 19, colW, 10);
       addSection("DISCUSSION", data.discussion, startX + colW + gap, 30, colW, 5);
 
       // Col 3
@@ -144,7 +153,7 @@ export const exportToPPTX = (data: PosterData, theme: PosterTheme, layout: Poste
       addSection("METHODS", data.methods, startX, 26, sideW, 9);
 
       // Center (Visuals Heavy)
-      addChart(startX + sideW + gap, 6, centerW, 12);
+      addVisual(data.resultsVisual, startX + sideW + gap, 6, centerW, 12);
       addSection("RESULTS & ANALYSIS", data.results, startX + sideW + gap, 19, centerW, 16);
 
       // Right
@@ -163,7 +172,7 @@ export const exportToPPTX = (data: PosterData, theme: PosterTheme, layout: Poste
 
       // Col 2
       addSection("METHODS", data.methods, startX + colW + gap, 6, colW, 12);
-      addChart(startX + colW + gap, 19, colW, 16);
+      addVisual(data.resultsVisual, startX + colW + gap, 19, colW, 16);
 
       // Col 3
       addSection("RESULTS", data.results, startX + (colW + gap) * 2, 6, colW, 18);
@@ -175,7 +184,6 @@ export const exportToPPTX = (data: PosterData, theme: PosterTheme, layout: Poste
       addSection("CONTACT", `${data.contactName}\n${data.contactEmail}`, startX + (colW + gap) * 3, 30, colW, 5);
   } else if (layout === 'geometric' || layout === 'cycle') {
       // Fallback for complex graphic layouts -> Map to Standard-ish grid for PPTX
-      // Since we can't easily draw the arrows or complex circles in basic PPTX gen
       const colW = 15;
       const gap = 1;
       const startX = 1;
@@ -183,7 +191,7 @@ export const exportToPPTX = (data: PosterData, theme: PosterTheme, layout: Poste
       addSection("INTRODUCTION", data.introduction, startX, 6, colW, 10);
       addSection("METHODS", data.methods, startX, 17, colW, 10);
       addSection("RESULTS", data.results, startX + colW + gap, 6, colW, 15);
-      addChart(startX + colW + gap, 22, colW, 8);
+      addVisual(data.resultsVisual, startX + colW + gap, 22, colW, 8);
       addSection("CONCLUSION", data.conclusions, startX + (colW + gap) * 2, 6, colW, 8);
       // Add Note about layout
       slide.addText("(Note: Complex graphical layout simplified for PPTX export)", { x: 0, y: 35, w: 48, h: 1, fontSize: 14, align: 'center', color: '999999' });

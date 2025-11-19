@@ -23,10 +23,13 @@ export const generatePosterContent = async (prompt: string): Promise<Partial<Pos
       discussion: { type: Type.STRING },
       conclusions: { type: Type.STRING },
       references: { type: Type.STRING, description: "Numbered list of references" },
-      resultsChart: {
+      
+      resultsVisual: {
         type: Type.OBJECT,
         nullable: true,
+        description: "Choose the most appropriate chart type (bar, line, pie) for the potential results.",
         properties: {
+          type: { type: Type.STRING, enum: ["bar", "line", "pie", "generic-svg"] },
           title: { type: Type.STRING },
           xAxisLabel: { type: Type.STRING },
           yAxisLabel: { type: Type.STRING },
@@ -41,6 +44,17 @@ export const generatePosterContent = async (prompt: string): Promise<Partial<Pos
             }
           }
         }
+      },
+
+      methodsVisual: {
+         type: Type.OBJECT,
+         nullable: true,
+         description: "An SVG diagram depicting the experimental setup or process flow.",
+         properties: {
+             type: { type: Type.STRING, enum: ["generic-svg"] },
+             title: { type: Type.STRING },
+             svgContent: { type: Type.STRING, description: "Raw SVG XML string. Use simple shapes (rect, circle, arrow, text). ViewBox='0 0 400 300'." }
+         }
       }
     },
     required: ["title", "abstract", "introduction", "methods", "results", "conclusions"],
@@ -52,8 +66,10 @@ export const generatePosterContent = async (prompt: string): Promise<Partial<Pos
       contents: `Generate content for a scientific science fair poster (ISEF style) based on the following topic or text. 
       Make the content academic, concise, and suitable for a 48x36 inch poster. 
       
-      If the topic involves potential quantitative data (e.g., comparisons, growth rates, survey results), invent plausible data for the 'resultsChart' field (a bar chart). 
-      If no quantitative data makes sense, leave 'resultsChart' null.
+      1. If the topic involves quantitative comparisons, generate a 'resultsVisual' as a 'bar' chart.
+      2. If it involves trends over time/variables, use a 'line' chart.
+      3. If it involves proportions, use a 'pie' chart.
+      4. ALWAYS generate a 'methodsVisual' that is a simple SVG diagram (flowchart or setup schematic) representing the methodology. The SVG must be valid XML, have a viewBox="0 0 800 500", and use standard colors (black stroke, white/light gray fill).
 
       Input Topic/Text:
       "${prompt}"
@@ -61,7 +77,7 @@ export const generatePosterContent = async (prompt: string): Promise<Partial<Pos
       config: {
         responseMimeType: "application/json",
         responseSchema: responseSchema,
-        systemInstruction: "You are an expert academic mentor helping students create high-quality science fair posters.",
+        systemInstruction: "You are an expert academic mentor helping students create high-quality science fair posters with data visualizations.",
       },
     });
 

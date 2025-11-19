@@ -1,9 +1,9 @@
 
 import React, { useState } from 'react';
-import { PosterData, PosterTheme, ChartDataPoint, PosterLayout } from '../types';
+import { PosterData, PosterTheme, ChartDataPoint, PosterLayout, VisualType } from '../types';
 import { THEMES } from '../themes';
 import { generatePosterContent } from '../services/geminiService';
-import { Sparkles, Download, Loader2, FileText, Presentation, ChevronRight, ChevronDown, Palette, LayoutTemplate, Wand2, BarChart3, Plus, Trash2, Info, Columns, RectangleHorizontal, Sidebar, CircleDashed, LayoutGrid, Table2 } from 'lucide-react';
+import { Sparkles, Download, Loader2, FileText, Presentation, ChevronRight, ChevronDown, Palette, LayoutTemplate, Wand2, BarChart3, Plus, Trash2, Info, Columns, RectangleHorizontal, Sidebar, CircleDashed, LayoutGrid, Table2, PieChart, LineChart, Image } from 'lucide-react';
 import { exportToPDF, exportToPPTX } from '../services/exportService';
 
 interface EditorProps {
@@ -43,44 +43,51 @@ export const Editor: React.FC<EditorProps> = ({ data, theme, layout, onDataChang
     setExpandedSection(expandedSection === section ? null : section);
   };
 
-  // Chart Helpers
-  const updateChartField = (field: string, value: string) => {
-    if (!data.resultsChart) return;
-    onDataChange({ ...data, resultsChart: { ...data.resultsChart, [field]: value } });
+  // --- Visual Helpers ---
+  const updateVisualField = (visualKey: 'resultsVisual' | 'methodsVisual', field: string, value: any) => {
+      const visual = data[visualKey];
+      if (!visual) return;
+      onDataChange({ ...data, [visualKey]: { ...visual, [field]: value } });
   };
 
-  const updateChartPoint = (index: number, field: keyof ChartDataPoint, value: string | number) => {
-    if (!data.resultsChart) return;
-    const newData = [...data.resultsChart.data];
+  const updateVisualDataPoint = (visualKey: 'resultsVisual' | 'methodsVisual', index: number, field: keyof ChartDataPoint, value: string | number) => {
+    const visual = data[visualKey];
+    if (!visual || !visual.data) return;
+    const newData = [...visual.data];
     newData[index] = { ...newData[index], [field]: value };
-    onDataChange({ ...data, resultsChart: { ...data.resultsChart, data: newData } });
+    onDataChange({ ...data, [visualKey]: { ...visual, data: newData } });
   };
 
-  const addChartPoint = () => {
-    if (!data.resultsChart) return;
+  const addVisualDataPoint = (visualKey: 'resultsVisual' | 'methodsVisual') => {
+    const visual = data[visualKey];
+    if (!visual) return;
+    const currentData = visual.data || [];
     onDataChange({ 
         ...data, 
-        resultsChart: { 
-            ...data.resultsChart, 
-            data: [...data.resultsChart.data, { label: 'New', value: 0 }] 
+        [visualKey]: { 
+            ...visual, 
+            data: [...currentData, { label: 'New', value: 0 }] 
         } 
     });
   };
 
-  const removeChartPoint = (index: number) => {
-      if (!data.resultsChart) return;
-      const newData = data.resultsChart.data.filter((_, i) => i !== index);
-      onDataChange({ ...data, resultsChart: { ...data.resultsChart, data: newData } });
+  const removeVisualDataPoint = (visualKey: 'resultsVisual' | 'methodsVisual', index: number) => {
+      const visual = data[visualKey];
+      if (!visual || !visual.data) return;
+      const newData = visual.data.filter((_, i) => i !== index);
+      onDataChange({ ...data, [visualKey]: { ...visual, data: newData } });
   };
 
-  const initChart = () => {
+  const initVisual = (visualKey: 'resultsVisual' | 'methodsVisual', type: VisualType) => {
       onDataChange({
           ...data,
-          resultsChart: {
-              title: "Analysis Results",
-              xAxisLabel: "Category",
+          [visualKey]: {
+              type: type,
+              title: type === 'generic-svg' ? "Diagram" : "Analysis Results",
+              xAxisLabel: "Variable",
               yAxisLabel: "Value",
-              data: [{ label: "A", value: 10 }, { label: "B", value: 20 }]
+              data: type !== 'generic-svg' ? [{ label: "A", value: 10 }, { label: "B", value: 20 }] : undefined,
+              svgContent: type === 'generic-svg' ? '<svg viewBox="0 0 400 200"><rect x="50" y="50" width="100" height="100" fill="#ddd" stroke="black"/><circle cx="250" cy="100" r="50" fill="#ddd" stroke="black"/><path d="M160,100 L190,100" stroke="black" stroke-width="2" marker-end="url(#arrow)"/></svg>' : undefined
           }
       });
   };
@@ -133,7 +140,7 @@ export const Editor: React.FC<EditorProps> = ({ data, theme, layout, onDataChang
                         <Sparkles className="w-4 h-4 text-blue-400" /> AI Assistant
                     </h3>
                     <p className="text-sm text-slate-400 leading-relaxed">
-                        Enter your research topic, abstract, or raw notes. Gemini will structure it into a professional scientific poster.
+                        Enter your research topic, abstract, or raw notes. Gemini will structure it into a professional scientific poster with appropriate charts and diagrams.
                     </p>
                 </div>
                 
@@ -172,61 +179,109 @@ export const Editor: React.FC<EditorProps> = ({ data, theme, layout, onDataChang
                 </AccordionSection>
 
                 <AccordionSection 
-                    title="Visuals & Charts" 
-                    isOpen={expandedSection === 'visuals'} 
-                    onClick={() => toggleSection('visuals')}
+                    title="Results Visual" 
+                    isOpen={expandedSection === 'results-visual'} 
+                    onClick={() => toggleSection('results-visual')}
                 >
-                   {!data.resultsChart ? (
-                       <div className="text-center py-4">
-                           <p className="text-sm text-slate-500 mb-4">No chart configured.</p>
-                           <button onClick={initChart} className="px-4 py-2 bg-slate-800 hover:bg-slate-700 rounded text-sm font-medium text-blue-400 border border-slate-700">
-                               + Add Bar Chart
-                           </button>
+                   {!data.resultsVisual ? (
+                       <div className="flex gap-2">
+                           <button onClick={() => initVisual('resultsVisual', 'bar')} className="flex-1 py-2 bg-slate-800 hover:bg-slate-700 rounded text-xs border border-slate-700 text-slate-300">+ Bar</button>
+                           <button onClick={() => initVisual('resultsVisual', 'line')} className="flex-1 py-2 bg-slate-800 hover:bg-slate-700 rounded text-xs border border-slate-700 text-slate-300">+ Line</button>
+                           <button onClick={() => initVisual('resultsVisual', 'pie')} className="flex-1 py-2 bg-slate-800 hover:bg-slate-700 rounded text-xs border border-slate-700 text-slate-300">+ Pie</button>
                        </div>
                    ) : (
                        <div className="space-y-4">
-                           <div className="flex justify-between items-center">
-                               <h4 className="text-xs font-bold text-slate-500 uppercase">Chart Config</h4>
-                               <button onClick={() => onDataChange({...data, resultsChart: null})} className="text-red-400 hover:text-red-300 p-1">
+                           <div className="flex justify-between items-center bg-slate-950 p-2 rounded border border-slate-800">
+                               <div className="flex gap-2">
+                                   {['bar', 'line', 'pie', 'generic-svg'].map(t => (
+                                       <button 
+                                        key={t}
+                                        onClick={() => updateVisualField('resultsVisual', 'type', t)}
+                                        className={`p-1.5 rounded ${data.resultsVisual?.type === t ? 'bg-blue-600 text-white' : 'text-slate-500 hover:bg-slate-800'}`}
+                                        title={t}
+                                       >
+                                           {t === 'bar' && <BarChart3 className="w-4 h-4" />}
+                                           {t === 'line' && <LineChart className="w-4 h-4" />}
+                                           {t === 'pie' && <PieChart className="w-4 h-4" />}
+                                           {t === 'generic-svg' && <Image className="w-4 h-4" />}
+                                       </button>
+                                   ))}
+                               </div>
+                               <button onClick={() => onDataChange({...data, resultsVisual: null})} className="text-red-400 hover:text-red-300 p-1">
                                    <Trash2 className="w-3 h-3" />
                                </button>
                            </div>
-                           <Input label="Chart Title" value={data.resultsChart.title} onChange={(v) => updateChartField('title', v)} />
-                           <div className="grid grid-cols-2 gap-2">
-                                <Input label="X Axis" value={data.resultsChart.xAxisLabel} onChange={(v) => updateChartField('xAxisLabel', v)} />
-                                <Input label="Y Axis" value={data.resultsChart.yAxisLabel} onChange={(v) => updateChartField('yAxisLabel', v)} />
-                           </div>
                            
-                           <div className="bg-slate-950 p-3 rounded-lg border border-slate-800">
-                               <div className="flex justify-between mb-2">
-                                   <label className="text-[10px] font-bold text-slate-600 uppercase">Data Points</label>
-                                   <button onClick={addChartPoint} className="text-green-500 hover:text-green-400"><Plus className="w-3 h-3" /></button>
-                               </div>
-                               <div className="space-y-2">
-                                   {data.resultsChart.data.map((point, idx) => (
-                                       <div key={idx} className="flex gap-2 items-center">
-                                           <input 
-                                                className="flex-1 p-1 text-xs border border-slate-700 rounded bg-slate-800 text-slate-300" 
-                                                value={point.label} 
-                                                onChange={(e) => updateChartPoint(idx, 'label', e.target.value)}
-                                                placeholder="Label"
-                                           />
-                                           <input 
-                                                className="w-16 p-1 text-xs border border-slate-700 rounded bg-slate-800 text-slate-300" 
-                                                type="number"
-                                                value={point.value} 
-                                                onChange={(e) => updateChartPoint(idx, 'value', Number(e.target.value))}
-                                                placeholder="Val"
-                                           />
-                                           <button onClick={() => removeChartPoint(idx)} className="text-slate-600 hover:text-red-400">
-                                               <Trash2 className="w-3 h-3" />
-                                           </button>
-                                       </div>
-                                   ))}
-                               </div>
-                           </div>
+                           <Input label="Title" value={data.resultsVisual.title} onChange={(v) => updateVisualField('resultsVisual', 'title', v)} />
+                           
+                           {data.resultsVisual.type !== 'generic-svg' && (
+                               <>
+                                    <div className="grid grid-cols-2 gap-2">
+                                        <Input label="X Axis" value={data.resultsVisual.xAxisLabel || ''} onChange={(v) => updateVisualField('resultsVisual', 'xAxisLabel', v)} />
+                                        <Input label="Y Axis" value={data.resultsVisual.yAxisLabel || ''} onChange={(v) => updateVisualField('resultsVisual', 'yAxisLabel', v)} />
+                                    </div>
+                                    
+                                    <div className="bg-slate-950 p-3 rounded-lg border border-slate-800">
+                                        <div className="flex justify-between mb-2">
+                                            <label className="text-[10px] font-bold text-slate-600 uppercase">Data Points</label>
+                                            <button onClick={() => addVisualDataPoint('resultsVisual')} className="text-green-500 hover:text-green-400"><Plus className="w-3 h-3" /></button>
+                                        </div>
+                                        <div className="space-y-2">
+                                            {data.resultsVisual.data?.map((point, idx) => (
+                                                <div key={idx} className="flex gap-2 items-center">
+                                                    <input 
+                                                            className="flex-1 p-1 text-xs border border-slate-700 rounded bg-slate-800 text-slate-300" 
+                                                            value={point.label} 
+                                                            onChange={(e) => updateVisualDataPoint('resultsVisual', idx, 'label', e.target.value)}
+                                                            placeholder="Label"
+                                                    />
+                                                    <input 
+                                                            className="w-16 p-1 text-xs border border-slate-700 rounded bg-slate-800 text-slate-300" 
+                                                            type="number"
+                                                            value={point.value} 
+                                                            onChange={(e) => updateVisualDataPoint('resultsVisual', idx, 'value', Number(e.target.value))}
+                                                            placeholder="Val"
+                                                    />
+                                                    <button onClick={() => removeVisualDataPoint('resultsVisual', idx)} className="text-slate-600 hover:text-red-400">
+                                                        <Trash2 className="w-3 h-3" />
+                                                    </button>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
+                               </>
+                           )}
+
+                           {data.resultsVisual.type === 'generic-svg' && (
+                               <Input area label="SVG Code" value={data.resultsVisual.svgContent || ''} onChange={(v) => updateVisualField('resultsVisual', 'svgContent', v)} />
+                           )}
                        </div>
                    )}
+                </AccordionSection>
+
+                <AccordionSection 
+                    title="Methods Visual" 
+                    isOpen={expandedSection === 'methods-visual'} 
+                    onClick={() => toggleSection('methods-visual')}
+                >
+                     {!data.methodsVisual ? (
+                        <div className="text-center">
+                           <button onClick={() => initVisual('methodsVisual', 'generic-svg')} className="px-4 py-2 bg-slate-800 hover:bg-slate-700 rounded text-sm font-medium text-blue-400 border border-slate-700">
+                               + Add Methods Diagram
+                           </button>
+                        </div>
+                     ) : (
+                        <div className="space-y-4">
+                             <div className="flex justify-between items-center">
+                               <h4 className="text-xs font-bold text-slate-500 uppercase">Diagram Config</h4>
+                               <button onClick={() => onDataChange({...data, methodsVisual: null})} className="text-red-400 hover:text-red-300 p-1">
+                                   <Trash2 className="w-3 h-3" />
+                               </button>
+                           </div>
+                           <Input label="Title" value={data.methodsVisual.title} onChange={(v) => updateVisualField('methodsVisual', 'title', v)} />
+                           <Input area label="SVG Code" value={data.methodsVisual.svgContent || ''} onChange={(v) => updateVisualField('methodsVisual', 'svgContent', v)} />
+                        </div>
+                     )}
                 </AccordionSection>
 
                 <AccordionSection 
@@ -241,27 +296,20 @@ export const Editor: React.FC<EditorProps> = ({ data, theme, layout, onDataChang
                 </AccordionSection>
 
                 <AccordionSection 
-                    title="Main Content 1" 
+                    title="Main Content" 
                     isOpen={expandedSection === 'col1'} 
                     onClick={() => toggleSection('col1')}
                 >
                      <Input area label="Introduction" value={data.introduction} onChange={(v) => handleInputChange('introduction', v)} />
-                     <Input area label="Methods" value={data.methods} onChange={(v) => handleInputChange('methods', v)} />
+                     <Input area label="Methods Text" value={data.methods} onChange={(v) => handleInputChange('methods', v)} />
                 </AccordionSection>
 
                 <AccordionSection 
-                    title="Results" 
-                    isOpen={expandedSection === 'col2'} 
-                    onClick={() => toggleSection('col2')}
-                >
-                     <Input area label="Results Text" value={data.results} onChange={(v) => handleInputChange('results', v)} />
-                </AccordionSection>
-
-                <AccordionSection 
-                    title="Discussion & Conclusion" 
+                    title="Results & Discussion" 
                     isOpen={expandedSection === 'col3'} 
                     onClick={() => toggleSection('col3')}
                 >
+                     <Input area label="Results Text" value={data.results} onChange={(v) => handleInputChange('results', v)} />
                      <Input area label="Discussion" value={data.discussion} onChange={(v) => handleInputChange('discussion', v)} />
                      <Input area label="Conclusions" value={data.conclusions} onChange={(v) => handleInputChange('conclusions', v)} />
                      <Input area label="References" value={data.references} onChange={(v) => handleInputChange('references', v)} />
@@ -369,7 +417,7 @@ const AccordionSection: React.FC<{ title: string; isOpen: boolean; onClick: () =
         <button className="w-full px-4 py-3 flex items-center justify-between bg-slate-800 hover:bg-slate-700 text-left transition-colors" onClick={onClick}>
             <div className="flex items-center gap-2">
                 <span className="font-semibold text-slate-200 text-sm">{title}</span>
-                {title.includes('Visuals') && <BarChart3 className="w-3 h-3 text-slate-400" />}
+                {title.includes('Visual') && <BarChart3 className="w-3 h-3 text-slate-400" />}
             </div>
             {isOpen ? <ChevronDown className="w-4 h-4 text-blue-400" /> : <ChevronRight className="w-4 h-4 text-slate-500" />}
         </button>
