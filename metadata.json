@@ -1,0 +1,5 @@
+{
+  "name": "SciPoster GenAI",
+  "description": "Generate professional ISEF-style scientific posters using Gemini AI. Export to PDF or PowerPoint.",
+  "requestFramePermissions": []
+}
